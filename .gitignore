@@ -1,0 +1,26 @@
+# Secrets & credentials
+.env
+.env.example
+*.json
+!remotion/package.json
+!remotion/package-lock.json
+!remotion/tsconfig.json
+
+# Generated output
+output/audio/
+output/videos/
+output/logs/
+output/scripts/
+
+# Dependencies
+remotion/node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Claude internals
+.claude/
+
+# Temp
+/tmp/

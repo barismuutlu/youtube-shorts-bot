@@ -1,0 +1,32 @@
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  max_duration: 58
+  min_duration: 30
+
+characters:
+  rick:
+    position: bottom-left
+    scale: 0.35
+  morty:
+    position: bottom-right
+    scale: 0.32
+
+subtitles:
+  font: Bangers
+  size: 72
+  color: white
+  stroke_color: black
+  stroke_width: 4
+  position: center
+
+script:
+  language: tr
+  style: "Rick ve Morty"
+  lines_per_character: "3-5"
+  max_words_per_line: 8
+
+drive:
+  upload_folder: "YouTube Shorts Queue"
+  naming: "{date}_{topic_slug}_{index}"

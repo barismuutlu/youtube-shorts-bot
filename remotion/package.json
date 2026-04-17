@@ -1,0 +1,21 @@
+{
+  "name": "youtube-shorts-remotion",
+  "version": "1.0.0",
+  "description": "Rick & Morty YouTube Shorts video renderer",
+  "main": "src/index.ts",
+  "scripts": {
+    "studio": "npx remotion studio",
+    "render": "npx remotion render src/index.ts ShortVideo",
+    "build": "npx remotion render src/index.ts ShortVideo ../output/videos/output.mp4"
+  },
+  "dependencies": {
+    "remotion": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/react": "^18.2.0"
+  }
+}
