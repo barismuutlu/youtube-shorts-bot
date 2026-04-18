@@ -1,18 +1,42 @@
 """
 Drive Uploader — Google Drive'a video yükleme.
-Google Drive Python SDK (google-api-python-client) kullanır.
+Service Account JSON kullanır — tarayıcı açmaz, OAuth gerektirmez.
+
+Kurulum:
+  1. Google Cloud Console → IAM & Admin → Service Accounts → Create
+  2. JSON key indir → service_account.json olarak proje köküne kaydet
+  3. Drive klasörünü service account e-postasıyla paylaş (Editor yetkisi)
 """
 
 import os
 import json
 import argparse
 from pathlib import Path
-from datetime import datetime
 
 from dotenv import load_dotenv
 from loguru import logger
 
 load_dotenv()
+
+SERVICE_ACCOUNT_FILE = Path(__file__).parent.parent / "service_account.json"
+SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+
+
+def _get_service():
+    from googleapiclient.discovery import build
+    from google.oauth2 import service_account
+
+    if not SERVICE_ACCOUNT_FILE.exists():
+        raise FileNotFoundError(
+            f"service_account.json bulunamadı: {SERVICE_ACCOUNT_FILE}\n"
+            "Google Cloud Console → IAM & Admin → Service Accounts → Create → Keys → Add Key → JSON\n"
+            "İndirilen dosyayı service_account.json olarak proje köküne kaydet."
+        )
+
+    creds = service_account.Credentials.from_service_account_file(
+        str(SERVICE_ACCOUNT_FILE), scopes=SCOPES
+    )
+    return build("drive", "v3", credentials=creds)
 
 
 def upload_to_drive(
@@ -24,14 +48,7 @@ def upload_to_drive(
     Videoyu Google Drive'a yükle.
     Dönüş: {"file_id": "...", "web_link": "...", "name": "..."}
     """
-    try:
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-        from googleapiclient.http import MediaFileUpload
-    except ImportError:
-        raise ImportError(
-            "Google Drive SDK eksik. Kur: pip install google-api-python-client google-auth"
-        )
+    from googleapiclient.http import MediaFileUpload
 
     video_path = Path(video_path)
     if not video_path.exists():
@@ -44,15 +61,7 @@ def upload_to_drive(
     if filename is None:
         filename = video_path.name
 
-    # Service account credentials
-    creds_path = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "service_account.json")
-
-    creds = service_account.Credentials.from_service_account_file(
-        creds_path,
-        scopes=["https://www.googleapis.com/auth/drive.file"],
-    )
-
-    service = build("drive", "v3", credentials=creds)
+    service = _get_service()
 
     file_metadata = {
         "name": filename,
@@ -63,10 +72,11 @@ def upload_to_drive(
         str(video_path),
         mimetype="video/mp4",
         resumable=True,
-        chunksize=5 * 1024 * 1024,  # 5MB chunk
+        chunksize=5 * 1024 * 1024,
     )
 
-    logger.info(f"Drive'a yükleniyor: {filename} ({video_path.stat().st_size / 1024 / 1024:.1f} MB)")
+    size_mb = video_path.stat().st_size / 1024 / 1024
+    logger.info(f"Drive'a yükleniyor: {filename} ({size_mb:.1f} MB)")
 
     request = service.files().create(
         body=file_metadata,

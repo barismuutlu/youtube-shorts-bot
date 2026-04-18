@@ -5,7 +5,7 @@ Girdi: TTS ile güncellenmiş script JSON, session ID
 """
 
 import json
-import os
+import math
 import subprocess
 import argparse
 from pathlib import Path
@@ -24,31 +24,30 @@ REMOTION_DIR = BASE_DIR / "remotion"
 FPS = 30
 
 
-def sec_to_frames(sec: float) -> int:
-    return round(sec * FPS)
-
-
 def prepare_props(script: dict, session_id: str) -> dict:
     """Script'e frame bilgilerini ekle, Remotion props JSON'ını hazırla."""
     lines = []
-    cumulative = 0.0
+    cumulative_frames = 0
 
-    # Footage dosyasını otomatik seç
     footage_dir = REMOTION_DIR / "public" / "footage"
     footage_files = list(footage_dir.glob("*.mp4"))
     footage_file = footage_files[0].name if footage_files else "parkour_001.mp4"
 
     for line in script["lines"]:
         updated = dict(line)
-        updated["startFrame"] = sec_to_frames(cumulative)
-        updated["durationFrames"] = sec_to_frames(line["duration"])
-        cumulative += line["duration"]
+        # ceil() ile ses dosyası sonunda kesilmez; tam sayı birikimi ile float kayması olmaz
+        duration_frames = math.ceil(line["duration"] * FPS)
+        updated["startFrame"] = cumulative_frames
+        updated["durationFrames"] = duration_frames
+        cumulative_frames += duration_frames
         lines.append(updated)
+
+    total_duration_sec = cumulative_frames / FPS
 
     return {
         "sessionId": session_id,
         "lines": lines,
-        "totalDurationSec": script["total_duration"],
+        "totalDurationSec": total_duration_sec,
         "footageFile": footage_file,
     }
 
@@ -58,7 +57,7 @@ def render_video(script: dict, session_id: str, output_path: Path = None) -> Pat
         output_path = OUTPUT_VIDEOS_DIR / f"{session_id}.mp4"
 
     props = prepare_props(script, session_id)
-    total_frames = sec_to_frames(props["totalDurationSec"])
+    total_frames = math.ceil(props["totalDurationSec"] * FPS)
 
     props_file = Path(f"/tmp/{session_id}_props.json")
     with open(props_file, "w", encoding="utf-8") as f:
@@ -82,7 +81,7 @@ def render_video(script: dict, session_id: str, output_path: Path = None) -> Pat
 
     logger.debug(f"Komut: {' '.join(cmd)}")
 
-    result = subprocess.run(
+    subprocess.run(
         cmd,
         cwd=str(REMOTION_DIR),
         check=True,

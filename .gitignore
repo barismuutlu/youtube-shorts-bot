@@ -11,6 +11,7 @@ output/audio/
 output/videos/
 output/logs/
 output/scripts/
+remotion/public/audio/
 
 # Dependencies
 remotion/node_modules/

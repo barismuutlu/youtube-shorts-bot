@@ -33,13 +33,25 @@ ELEVENLABS_SETTINGS = {
 
 
 def _get_audio_duration(mp3_path: Path) -> float:
-    """MP3 dosyasının süresini mutagen ile okur, yoksa tahmin eder."""
+    """MP3 dosyasının gerçek süresini ffprobe ile okur."""
+    import subprocess as _sp
+    result = _sp.run(
+        [
+            "ffprobe", "-v", "quiet",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(mp3_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0 and result.stdout.strip():
+        return float(result.stdout.strip())
+    # ffprobe başarısız olursa mutagen dene
     try:
         from mutagen.mp3 import MP3
-        audio = MP3(str(mp3_path))
-        return audio.info.length
-    except ImportError:
-        # Mutagen yoksa kelime sayısına göre tahmin et
+        return MP3(str(mp3_path)).info.length
+    except Exception:
         return None
 
 
@@ -69,9 +81,9 @@ def synthesize_line(
 
     duration = _get_audio_duration(output_path)
     if duration is None:
-        # Tahmin: kelime başına ~0.4 saniye
-        duration = len(text.split()) * 0.4
-        logger.warning(f"mutagen yok, süre tahmin edildi: {duration:.2f}sn")
+        # Son çare: kelime başına ~0.5 saniye (ElevenLabs için daha gerçekçi)
+        duration = len(text.split()) * 0.5
+        logger.warning(f"ffprobe/mutagen başarısız, süre tahmin edildi: {duration:.2f}sn")
 
     logger.debug(f"  {output_path.name} → {duration:.2f}sn")
     return duration

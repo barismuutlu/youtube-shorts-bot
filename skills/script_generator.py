@@ -32,7 +32,7 @@ Kurallar:
 - Rick her şeyi bilir, keskin, alaycı ve zeki; "Morty" kelimesini sık kullanır
 - Morty meraklı, biraz şaşkın ama sevimli
 - Her replik maksimum 12 kelime (altyazıya sığsın)
-- Toplam 30-55 saniye arası olmalı
+- Toplam 45-58 saniye arası olmalı
 - Her replik için tahmini konuşma süresi saniye cinsinden hesapla (yaklaşık: kelime_sayısı × 0.4)
 - emotion değeri: "explain", "excited", "sarcastic", "confused", "shocked", "happy" birinden biri olmalı
 
@@ -53,7 +53,7 @@ Yanıtını SADECE aşağıdaki JSON formatında döndür, başka hiçbir şey y
 USER_PROMPT_TEMPLATE = """Konu: {topic}
 
 Rick ve Morty bu konuyu kısa bir YouTube Shorts videosunda ele alıyor. Türkçe yaz.
-Toplam 6-10 replik, 30-55 saniye arası."""
+Toplam 8-12 replik, 45-58 saniye arası."""
 
 
 def generate_script(topic: str = None, pdf_path: str = None) -> dict:
@@ -100,7 +100,7 @@ def _validate_script(script: dict):
     assert "title" in script, "title eksik"
     assert "lines" in script and len(script["lines"]) > 0, "lines boş"
     assert "total_duration" in script, "total_duration eksik"
-    assert 25 <= script["total_duration"] <= 60, f"Süre uygunsuz: {script['total_duration']}sn"
+    assert 40 <= script["total_duration"] <= 60, f"Süre uygunsuz: {script['total_duration']}sn"
     for i, line in enumerate(script["lines"]):
         assert line.get("character") in ("rick", "morty"), f"Satır {i}: geçersiz karakter"
         assert line.get("text"), f"Satır {i}: metin boş"
