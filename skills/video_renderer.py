@@ -52,9 +52,10 @@ def prepare_props(script: dict, session_id: str) -> dict:
     }
 
 
-def render_video(script: dict, session_id: str, output_path: Path = None) -> Path:
+def render_video(script: dict, session_id: str, output_path: Path = None, topic_slug: str = None) -> Path:
     if output_path is None:
-        output_path = OUTPUT_VIDEOS_DIR / f"{session_id}.mp4"
+        name = topic_slug or session_id
+        output_path = OUTPUT_VIDEOS_DIR / f"{name}.mp4"
 
     props = prepare_props(script, session_id)
     total_frames = math.ceil(props["totalDurationSec"] * FPS)
